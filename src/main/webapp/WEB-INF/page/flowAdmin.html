@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="/ssm_Demo1/static/layui/css/layui.css"  media="all">
+</head>
+<body>
+                    <div class="layui-tab layui-tab-card" >
+                        <ul class="layui-tab-title">
+                            <li class="layui-this">我发起的流程</li>
+                            <li>待审批的流程</li>
+                        </ul>
+                        <div class="layui-tab-content" style="">
+                            <div class="layui-tab-item layui-show">
+                                 <table lay-filter="flowMy" id="flowMy">
+                                    <thead>
+                                    <tr>
+                                        <th lay-data="{field:'id', width:100}">ID</th>
+                                        <th lay-data="{field:'flowName', width:180}">流程名称</th>
+                                        <th lay-data="{field:'initiatorName'}">发起人</th>
+                                        <th lay-data="{field:'currExName'}">审批人</th>
+                                        <th lay-data="{field:'status'}">流程状态</th>
+                                        <th lay-data="{field:'flowState'}">流程说明</th>
+                                        <th lay-data="{field:'beginTime'}">开始时间</th>
+                                        <th lay-data="{field:'endTime'}">结束时间</th>
+                                    </tr>
+                                    </thead>
+                                </table>
+                            </div>
+                            <div class="layui-tab-item">3</div>
+                        </div>
+                    </div>
+</body>
+
+<script src="/ssm_Demo1/static/jquery/jquery.min.js"></script>
+<script src="/ssm_Demo1/static/layui/layui.all.js" charset="utf-8"></script>
+
+<script type="text/html" id="toolbarDemo">
+    <div class="layui-btn-container">
+        <button class="layui-btn layui-btn-sm" lay-event="addFlow">发起流程</button>
+    </div>
+</script>
+
+<script>
+
+    var options={
+        height: 550 //设置高度
+        ,limit: 10 //注意：请务必确保 limit 参数（默认：10）是与你服务端限定的数据条数一致
+        //支持所有基础参数
+        ,page:true
+        ,toolbar: '#toolbarDemo'
+        ,defaultToolbar:[]
+        ,url:'/ssm_Demo1/flow-record/getFlowRecordList'
+        ,where:{type:'my'}
+        ,parseData: function(res){ //res 即为原始返回的数据
+            return {
+                "code": res.code, //解析接口状态
+                "msg": res.msg, //解析提示文本
+                "count": res.count, //解析数据长度
+                "data": res.data.records //解析数据列表
+            };
+        }
+    }
+    var table = layui.table;
+    var laydate= layui.laydate;
+
+    table.init('flowMy',options);
+    var addHtml=
+        '    <div class="layui-form-item">\n' +
+        '        <label class="layui-form-label">发起人</label>\n' +
+        '        <div class="layui-input-block">\n' +
+        '            <input type="text" name="initiatorName" id="initiatorName" required  lay-verify="required" autocomplete="off" class="layui-input" style="width: 200px;" readonly="readonly" value="${userModel.name}" >\n' +
+        '            <input type="hidden" name="id" id="id">\n' +
+        '            <input type="hidden" name="initiator" id="initiator" value="${userModel.id}">\n' +
+        '        </div>\n' +
+        '    </div>\n' +
+        '\n' +
+        '    <div class="layui-form-item">\n' +
+        '        <label class="layui-form-label">流程选择</label>\n' +
+        '        <div class="layui-input-block">\n' +
+        '            <select style="margin-top:10px;width: 100px " name="flowId" id="flowId">' +
+        '                 <#list  flows as flow>\n' +
+        '                       <option value="${flow.id}"> ${flow.name}</option>  \n' +
+        '                </#list></select>\n' +
+        '        </div>\n' +
+        '    </div>'+
+        '    <div class="layui-form-item">\n' +
+        '        <label class="layui-form-label">审批人</label>\n' +
+        '        <div class="layui-input-block">\n' +
+        '            <input type="text" name="currExName" id="currExName" required  lay-verify="required" autocomplete="off" class="layui-input" style="width: 200px" readonly="readonly" >\n' +
+        '            <input type="hidden" name="currEx" id="currEx">\n' +
+        '        </div>\n' +
+        '    </div>'+
+        '    <div class="layui-form-item">\n' +
+        '        <label class="layui-form-label">开始时间</label>\n' +
+        '        <div class="layui-input-block">\n' +
+        '            <input type="text" name="beginTime" id="beginTime" required  lay-verify="required" autocomplete="off" class="layui-input" style="width: 200px" >\n' +
+        '        </div>\n' +
+        '    </div>'+
+        '    <div class="layui-form-item">\n' +
+        '        <label class="layui-form-label">结束时间</label>\n' +
+        '        <div class="layui-input-block">\n' +
+        '            <input type="text" name="endTime" id="endTime" required  lay-verify="required" autocomplete="off" class="layui-input" style="width: 200px" >\n' +
+        '        </div>\n' +
+        '    </div>'
+    '    <div class="layui-form-item">\n' +
+    '        <label class="layui-form-label">流程说明</label>\n' +
+    '        <div class="layui-input-block">\n' +
+    '            <input type="text" name="flowState" id="flowState" required  lay-verify="required" autocomplete="off" class="layui-input" style="width: 200px" >\n' +
+    '        </div>\n' +
+    '    </div>';
+
+
+
+    //头工具栏事件
+    table.on('toolbar(flowMy)', function(obj){
+        var checkStatus = table.checkStatus(obj.config.id);
+        switch(obj.event){
+            case 'addFlow':
+                layer.open({
+                    type: 1,
+                    skin: 'layui-layer-molv',
+                    offset: 't',
+                    area: ['600px', '500px'],
+                    btn: ['确认', '取消',],
+                    btnAlign:'c',
+                    resize:false,
+                    content: addHtml //这里content是一个普通的String
+                    ,yes: function(index, layero){
+                       /* $.ajax({
+                            url:"updateFlow",
+                            data:{id:null,name:name,userName:userName,userId:userId,type:type},
+                            type:"post",
+                            dataType:"json",
+                            success:function(data){
+                                if(data.code==200){
+                                    alert(data.msg);
+                                    layer.close(index);
+                                    table.reload('demo', options);
+                                }
+                            }
+                        })*/
+                    }
+                    ,btn2: function(index, layero){
+                        //按钮【按钮二】的回调
+                        //return false 开启该代码可禁止点击该按钮关闭
+                    }
+                    ,cancel: function(){
+                        //右上角关闭回调
+                        return false; 开启该代码可禁止点击该按钮关闭
+                    }
+                });
+                $("#flowId").change(function(){
+                    var flowId=$(this).val();
+                    $.get("/ssm_Demo1/flow/selectFlowById",{id:flowId},function(data){$("#currEx").val(data.flow.userId);$("#currExName").val(data.flow.userName);});
+                });
+                laydate.render({
+                    elem: '#beginTime' //指定元素
+                });
+                laydate.render({
+                    elem: '#endTime' //指定元素
+                });
+                $("#flowId").trigger("change",null);
+                break;
+        };
+    });
+
+</script>
+</html>
